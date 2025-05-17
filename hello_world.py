@@ -14,7 +14,7 @@ try:
 
     # Load a font and draw text
     font = ImageFont.load_default()
-    draw.text((10, 10), "Hello World", font=font, fill=0)  # fill=0 = black text
+    draw.text((10, 10), "Hello World!", font=font, fill=0)  # fill=0 = black text
 
     # Send image to display
     epd.display(epd.getbuffer(image))
