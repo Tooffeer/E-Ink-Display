@@ -44,7 +44,7 @@ def wrap_text(draw, text, font, max_width):
     lines = []
     words = text.split()
     line = ""
-
+    
     for word in words:
         test_line = f"{line} {word}".strip()
         bbox = draw.textbbox((0, 0), test_line, font=font)  # returns (x0, y0, x1, y1)
@@ -94,20 +94,22 @@ while True:
 
             # Text box on right side (x=130 to end)
             x_text = 130
-            y_text = 10
+            y_text = 6
             max_width = epd.width
 
             # Wrap text
             song_name_lines  = wrap_text(draw, song_name, font, max_width)
-            #artist_lines = wrap_text(draw, artists, font, max_width)
+            artists = ", ".join([artist["name"] for artist in artists]) # Add comma before each artist
+            artist_lines = wrap_text(draw, artists, font, max_width)
 
             # Draw wrapped text
             for line in song_name_lines[:3]:  # limit to 3 lines
                 draw.text((x_text, y_text), line, font=font, fill=0)
-                y_text += 12
-
-
-
+                y_text += 18
+            
+            for line in artist_lines[:3]:  # limit artist lines if needed
+                draw.text((x_text, y_text), line, font=font, fill=0)
+                y_text += 18
 
             # Draw image
             epd.display(epd.getbuffer(img))
