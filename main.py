@@ -6,6 +6,12 @@ from dotenv import load_dotenv
 from io import BytesIO
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+from waveshare_epd import epd2in13_V4
+
+# Initilize display
+epd = epd2in13_V4.EPD()
+epd.init()
+epd.Clear()
 
 # Get parameters from .env file
 load_dotenv()
@@ -97,16 +103,21 @@ while True:
                 y_text += 12
 
             # Draw image
-            img.show()
+            #img.show()
+            epd.display(epd.getbuffer(img))
+            epd.sleep()
     else:
         print("No song")
         draw.text((10, 10), "No song is currently playing.", font=font, fill=0)
 
         if not idle:
             idle = True
-            img.show()
+            #img.show()
+            epd.display(epd.getbuffer(img))
+            epd.sleep()
 
     # Update previous
     previous = current
 
-    time.sleep(5)
+    time.sleep(10)
+
