@@ -19,8 +19,6 @@ sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
     scope=scope
 ))
 
-
-
 def draw_album_cover(track):
     # Get album cover 
     album_url = track["item"]["album"]["images"][0]["url"] # Get the first image url from album images
@@ -54,45 +52,66 @@ def wrap_text(draw, text, font, max_width):
         lines.append(line)
     return lines
 
-previous = None;
+
+
+
+
+
+
+
+
+
+
+previous = None # Previous track
 
 # Main loop 
 while True:
-    # Create image with white background
+    # Get the current track
+    current = sp.current_playback()
+
+    # Create a blank image
     img = Image.new("1", (250, 122), color=1)
     draw = ImageDraw.Draw(img)
-    #font = ImageFont.truetype("arial.ttf", size=14) # Arial on windows
-    font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", size=14) # Arial on mac
+    font = ImageFont.truetype("arial.ttf", size=14) # Arial on windows #font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", size=14) # Arial on mac
 
-    # Get the current song
-    current = sp.current_playback() 
+    if current:
+        # Check if track is the same as the previous track
+        if previous is not None and current["item"]["name"] == previous["item"]["name"]:
+            print("Same song", current["item"]["name"])
+        elif current and current.get("item"):
+            print("New song", current["item"]["name"])
 
-    # If there is a current song, display it
-    #if current == previous:
-    #    time.sleep(10)
-    if current and current.get("item"):
-        # Draw album cover
-        draw_album_cover(current)
+            # Draw album cover
+            draw_album_cover(current)
 
-        # Get song title and artist
-        song_name = current["item"]["name"]
-        artists = current["item"]["artists"]
+            # Get song title and artist
+            song_name = current["item"]["name"]
+            artists = current["item"]["artists"]
 
-        # Text box on right side (x=130 to end)
-        x_text = 130
-        y_text = 10
-        max_width = 130
+            # Text box on right side (x=130 to end)
+            x_text = 130
+            y_text = 10
+            max_width = 130
 
-        # Wrap text
-        track_lines  = wrap_text(draw, song_name, font, max_width)
-        #artist_lines = wrap_text(draw, artists, font, max_width)
+            # Wrap text
+            track_lines  = wrap_text(draw, song_name, font, max_width)
+            #artist_lines = wrap_text(draw, artists, font, max_width)
 
-        # Draw wrapped text
-        for line in track_lines[:3]:  # limit to 3 lines
-            draw.text((x_text, y_text), line, font=font, fill=0)
-            y_text += 12
+            # Draw wrapped text
+            for line in track_lines[:3]:  # limit to 3 lines
+                draw.text((x_text, y_text), line, font=font, fill=0)
+                y_text += 12
+
+            # Draw image
+            img.show()
     else:
-        draw.text((10, 10), "No song is currently playing.", font=font, fill=0)
+        print("No song")
 
-    img.show()  # Show for preview, replace later for e-ink functions
+        draw.text((10, 10), "No song is currently playing.", font=font, fill=0)
+        img.show()
+    
+
+    # Update previous
+    previous = current
+
     time.sleep(5)
