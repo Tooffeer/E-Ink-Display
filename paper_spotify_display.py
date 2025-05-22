@@ -19,18 +19,11 @@ sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
     scope=scope
 ))
 
-# Create image with white background
-img = Image.new("1", (250, 122), color=1)
-draw = ImageDraw.Draw(img)
-font = ImageFont.truetype("arial.ttf", size=14)
 
-# TEST: Display currently played song
-# Get current song
-current = sp.current_playback() 
 
-if current and current.get("item"):
+def draw_album_cover(track):
     # Get album cover 
-    album_url = current["item"]["album"]["images"][0]["url"] # Get the first image url from album images
+    album_url = track["item"]["album"]["images"][0]["url"] # Get the first image url from album images
     response = requests.get(album_url)
     album_cover = Image.open(BytesIO(response.content))
 
@@ -41,47 +34,65 @@ if current and current.get("item"):
     # Draw image
     img.paste(album_cover, (0, 0))
 
-    # Get and draw current song name
-    song_name = current["item"]["name"]
-    #draw.text((130, 10), f"{song_name}", font=font, fill=0)
+# Wrap text if needed (basic manual wrap)
+def wrap_text(draw, text, font, max_width):
+    lines = []
+    words = text.split()
+    line = ""
 
-    # Text box on right side (x=130 to end)
-    x_text = 130
-    y_text = 10
-    max_width = 130
+    for word in words:
+        test_line = f"{line} {word}".strip()
+        bbox = draw.textbbox((0, 0), test_line, font=font)  # returns (x0, y0, x1, y1)
+        w = bbox[2] - bbox[0]  # calculate width from bbox
+        if w <= max_width:
+            line = test_line
+        else:
+            if line:
+                lines.append(line)
+            line = word
+    if line:
+        lines.append(line)
+    return lines
 
-    # Wrap text if needed (basic manual wrap)
-    def wrap_text(draw, text, font, max_width):
-        lines = []
-        words = text.split()
-        line = ""
+previous = None;
 
-        for word in words:
-            test_line = f"{line} {word}".strip()
-            bbox = draw.textbbox((0, 0), test_line, font=font)  # returns (x0, y0, x1, y1)
-            w = bbox[2] - bbox[0]  # calculate width from bbox
-            if w <= max_width:
-                line = test_line
-            else:
-                if line:
-                    lines.append(line)
-                line = word
-        if line:
-            lines.append(line)
-        return lines
+# Main loop 
+while True:
+    # Create image with white background
+    img = Image.new("1", (250, 122), color=1)
+    draw = ImageDraw.Draw(img)
+    #font = ImageFont.truetype("arial.ttf", size=14) # Arial on windows
+    font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", size=14) # Arial on mac
 
-    # Wrap text
-    track_lines  = wrap_text(draw, song_name, font, max_width)
-    # Get and draw artist name
+    # Get the current song
+    current = sp.current_playback() 
 
-    # Draw wrapped text
-    for line in track_lines[:3]:  # limit to 3 lines
-         draw.text((x_text, y_text), line, font=font, fill=0)
-         y_text += 12
+    # If there is a current song, display it
+    #if current == previous:
+    #    time.sleep(10)
+    if current and current.get("item"):
+        # Draw album cover
+        draw_album_cover(current)
 
-    
-else:
-    draw.text((10, 10), "No song is currently playing.", font=font, fill=0)
+        # Get song title and artist
+        song_name = current["item"]["name"]
+        artists = current["item"]["artists"]
 
-img.show()  # Show for preview
+        # Text box on right side (x=130 to end)
+        x_text = 130
+        y_text = 10
+        max_width = 130
 
+        # Wrap text
+        track_lines  = wrap_text(draw, song_name, font, max_width)
+        #artist_lines = wrap_text(draw, artists, font, max_width)
+
+        # Draw wrapped text
+        for line in track_lines[:3]:  # limit to 3 lines
+            draw.text((x_text, y_text), line, font=font, fill=0)
+            y_text += 12
+    else:
+        draw.text((10, 10), "No song is currently playing.", font=font, fill=0)
+
+    img.show()  # Show for preview, replace later for e-ink functions
+    time.sleep(5)
