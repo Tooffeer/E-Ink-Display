@@ -19,6 +19,7 @@ sp = spotipy.Spotify(auth_manager=SpotifyOAuth(
     scope=scope
 ))
 
+# Draws album cover
 def draw_album_cover(track):
     # Get album cover 
     album_url = track["item"]["album"]["images"][0]["url"] # Get the first image url from album images
@@ -52,17 +53,8 @@ def wrap_text(draw, text, font, max_width):
         lines.append(line)
     return lines
 
-
-
-
-
-
-
-
-
-
-
 previous = None # Previous track
+idle = False
 
 # Main loop 
 while True:
@@ -75,6 +67,8 @@ while True:
     font = ImageFont.truetype("arial.ttf", size=14) # Arial on windows #font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", size=14) # Arial on mac
 
     if current:
+        idle = False
+        
         # Check if track is the same as the previous track
         if previous is not None and current["item"]["name"] == previous["item"]["name"]:
             print("Same song", current["item"]["name"])
@@ -106,10 +100,11 @@ while True:
             img.show()
     else:
         print("No song")
-
         draw.text((10, 10), "No song is currently playing.", font=font, fill=0)
-        img.show()
-    
+
+        if not idle:
+            idle = True
+            img.show()
 
     # Update previous
     previous = current
