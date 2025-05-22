@@ -8,13 +8,13 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 from waveshare_epd import epd2in13_V4
 
+# Get parameters from .env file
+load_dotenv()
+
 # Initilize display
 epd = epd2in13_V4.EPD()
 epd.init()
 epd.Clear()
-
-# Get parameters from .env file
-load_dotenv()
 
 # Authenticate Spotify requests
 scope = "user-read-currently-playing user-read-playback-state"
@@ -64,25 +64,26 @@ idle = False
 
 # Main loop 
 while True:
+    # Create a blank image
+    img = Image.new("1", (epd.height, epd.width), color=1)
+    draw = ImageDraw.Draw(img)
+    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 20)
+
     # Get the current track
     current = sp.current_playback()
 
-    # Create a blank image
-    img = Image.new("1", (250, 122), color=1)
-    draw = ImageDraw.Draw(img)
-    font = ImageFont.truetype("arial.ttf", size=14) # Arial on windows #font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", size=14) # Arial on mac
-
-    if current:
+    if current and current.get("item"):
         idle = False
         
         # Check if track is the same as the previous track
-        if previous is not None and current["item"]["name"] == previous["item"]["name"]:
+        if previous and previous.get("item") and current["item"]["name"] == previous["item"]["name"]:
             print("Same song", current["item"]["name"])
         elif current and current.get("item"):
             print("New song", current["item"]["name"])
 
             # Draw album cover
-            draw_album_cover(current)
+            if current["item"]["album"].get("images", []):
+                draw_album_cover(current)
 
             # Get song title and artist
             song_name = current["item"]["name"]
@@ -103,16 +104,13 @@ while True:
                 y_text += 12
 
             # Draw image
-            #img.show()
             epd.display(epd.getbuffer(img))
-            epd.sleep()
     else:
         print("No song")
         draw.text((10, 10), "No song is currently playing.", font=font, fill=0)
 
         if not idle:
             idle = True
-            #img.show()
             epd.display(epd.getbuffer(img))
             epd.sleep()
 
