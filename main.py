@@ -67,13 +67,16 @@ while True:
     # Create a blank image
     img = Image.new("1", (epd.height, epd.width), color=1)
     draw = ImageDraw.Draw(img)
-    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 20)
+    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 18)
 
     # Get the current track
     current = sp.current_playback()
 
     if current and current.get("item"):
-        idle = False
+        # Wake display if sleeping, needs to be initialized again before writing to the display
+        if idle is True:
+            epd.init() # Initializes the display
+            idle = False
         
         # Check if track is the same as the previous track
         if previous and previous.get("item") and current["item"]["name"] == previous["item"]["name"]:
@@ -92,27 +95,30 @@ while True:
             # Text box on right side (x=130 to end)
             x_text = 130
             y_text = 10
-            max_width = 130
+            max_width = epd.width
 
             # Wrap text
-            track_lines  = wrap_text(draw, song_name, font, max_width)
+            song_name_lines  = wrap_text(draw, song_name, font, max_width)
             #artist_lines = wrap_text(draw, artists, font, max_width)
 
             # Draw wrapped text
-            for line in track_lines[:3]:  # limit to 3 lines
+            for line in song_name_lines[:3]:  # limit to 3 lines
                 draw.text((x_text, y_text), line, font=font, fill=0)
                 y_text += 12
+
+
+
 
             # Draw image
             epd.display(epd.getbuffer(img))
     else:
         print("No song")
         draw.text((10, 10), "No song is currently playing.", font=font, fill=0)
-
+        
         if not idle:
             idle = True
             epd.display(epd.getbuffer(img))
-            epd.sleep()
+            epd.sleep() # Powers down the display
 
     # Update previous
     previous = current
