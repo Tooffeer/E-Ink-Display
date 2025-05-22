@@ -80,9 +80,9 @@ while True:
         
         # Check if track is the same as the previous track
         if previous and previous.get("item") and current["item"]["name"] == previous["item"]["name"]:
-            print("Same song", current["item"]["name"])
+            print("Same song: ", current["item"]["name"])
         elif current and current.get("item"):
-            print("New song", current["item"]["name"])
+            print("New song: ", current["item"]["name"])
 
             # Draw album cover
             if current["item"]["album"].get("images", []):
@@ -114,7 +114,7 @@ while True:
             # Draw image
             epd.display(epd.getbuffer(img))
     else:
-        print("No song")
+        print("No song.")
         draw.text((10, 10), "No song is currently playing.", font=font, fill=0)
         
         if not idle:
